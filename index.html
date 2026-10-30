@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monthly Ordering Form</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; }
+    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .header { text-align: center; margin-bottom: 20px; }
+    .header img { width: 120px; height: auto; margin-bottom: 10px; border-radius: 50%; }
+    h1 { color: #007bff; font-size: 1.8em; margin-bottom: 5px; }
+    h2 { color: #6c757d; font-size: 1.1em; font-weight: normal; margin-top: 0; }
+    h3 { margin-top: 25px; color: #343a40; border-bottom: 2px solid #007bff; padding-bottom: 5px; font-size: 1.2em; }
+    label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: bold; }
+    input[type="text"], input[type="number"], select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+    .scan-input-group { display: flex; align-items: center; }
+    .scan-input-group input { flex-grow: 1; border-right: none; border-radius: 4px 0 0 4px; margin-bottom: 0; }
+    
+    .btn-action { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; height: 41px; }
+    .btn-action:hover { background-color: #0056b3; }
+    .btn-secondary { background-color: #6c757d; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; height: 41px; }
+
+    .item-card { background: #fdfdfd; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
+    .item-card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 12px; font-weight: bold; color: #007bff; }
+    .item-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; font-size: 0.85em; }
+    .item-grid div { background: #f8fafc; padding: 6px; border-radius: 4px; }
+
+    .btn-add { background-color: #17a2b8; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    .btn-remove { background-color: #dc3545; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em; }
+
+    .action-btns { display: flex; gap: 15px; margin-top: 25px; }
+    .btn-submit { background-color: #28a745; color: white; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; width: 70%; font-weight: bold; }
+    .btn-submit:hover { background-color: #218838; }
+    .btn-cancel { background-color: #6c757d; color: white; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; width: 30%; }
+
+    #message-area { margin-top: 20px; padding: 12px; border-radius: 4px; text-align: center; display: none; font-weight: bold; }
+    .error { background-color: #ffe6e6; color: red; border: 1px solid red; }
+
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
+    .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; width: 80%; max-width: 450px; border-radius: 8px; text-align: center; }
+    .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+
+    .footer { margin-top: 40px; padding-top: 15px; border-top: 1px solid #ced4da; font-size: 0.8em; color: #6c757d; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <img src="https://lh3.googleusercontent.com/d/1tCDAMimy_b0x9kRmWNyYMn4voR9Ynr0J" alt="Logo">
+    <h1>Monthly Ordering Form</h1>
+    <h2>Haemodialysis Unit, Sarawak General Hospital</h2>
+  </div>
+
+  <form id="orderForm">
+    <div class="grid-2">
+      <div>
+        <label for="orderMonth">Month</label>
+        <select id="orderMonth" required></select>
+      </div>
+      <div>
+        <label for="orderYear">Year</label>
+        <select id="orderYear" required></select>
+      </div>
+    </div>
+
+    <div>
+      <label for="t242No">T242 No.</label>
+      <input type="text" id="t242No" placeholder="Enter T242 Number" required>
+    </div>
+
+    <h3>Catalogue Search</h3>
+    <div class="grid-3">
+      <div>
+        <label for="itemDropdown">Select Item Name</label>
+        <select id="itemDropdown" onchange="onDropdownSelect(this.value)">
+          <option value="" selected>-- Loading Catalogue... --</option>
+        </select>
+      </div>
+      <div>
+        <label for="searchKeyword">Search Item by Name</label>
+        <div class="scan-input-group">
+          <input type="text" id="searchKeyword" placeholder="Key in item name...">
+          <button type="button" class="btn-action" onclick="searchCatalogue()">🔍</button>
+        </div>
+      </div>
+      <div>
+        <label>Scan QR Code</label>
+        <button type="button" class="btn-secondary" style="width: 100%;" onclick="startScanner()">📷 Scan Product QR</button>
+      </div>
+    </div>
+
+    <div id="searchResultsSection" style="display: none;">
+      <h3>Search Results</h3>
+      <div id="searchResultsContainer"></div>
+    </div>
+
+    <h3>List of Monthly Ordering</h3>
+    <div id="selectedItemsContainer">
+      <p style="color: #6c757d; font-style: italic;" id="emptyListMsg">No items added yet. Search and add items from the catalogue above.</p>
+    </div>
+
+    <div class="action-btns">
+      <button type="submit" class="btn-submit" id="submitBtn">Print as PDF</button>
+      <button type="button" class="btn-cancel" onclick="resetForm()">Cancel</button>
+    </div>
+
+    <div id="message-area"></div>
+  </form>
+
+  <div class="footer">
+    &copy; Designed and developed by PPP Zulfadlie bin Janie<br>
+    for Haemodialysis Unit, Sarawak General Hospital
+  </div>
+</div>
+
+<!-- QR Scanner Modal -->
+<div id="scannerModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="stopScanner()">&times;</span>
+    <h2>Scan Item QR Code</h2>
+    <div id="reader-modal" style="width: 100%;"></div>
+  </div>
+</div>
+
+<script>
+  const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbyGAnVBVbeD4J4II1gsyDPdv-mOYJFLmKsj5nwg1rBz9uZCN6y7uQyttP9GTQBGmkDj-g/exec";
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  
+  let fullCatalogue = [];
+  let selectedItems = [];
+  let html5QrCode = null;
+
+  window.onload = function() {
+    populateDates();
+    loadCatalogue();
+  };
+
+  function populateDates() {
+    const monthSelect = document.getElementById('orderMonth');
+    const yearSelect = document.getElementById('orderYear');
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth();
+
+    MONTHS.forEach((m, idx) => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      if (idx === currentMonth) opt.selected = true;
+      monthSelect.appendChild(opt);
+    });
+
+    for (let y = 2026; y <= 2030; y++) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      if (y === currentYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+  }
+
+  function loadCatalogue() {
+    fetch(`${SCRIPT_API_URL}?action=getCatalogue`)
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          fullCatalogue = res.data;
+          const dropdown = document.getElementById('itemDropdown');
+          dropdown.innerHTML = '<option value="" disabled selected>-- Select an Item from Catalogue --</option>';
+          fullCatalogue.forEach((item, index) => {
+            const opt = document.createElement('option');
+            opt.value = index;
+            opt.textContent = item.namaItem;
+            dropdown.appendChild(opt);
+          });
+        }
+      });
+  }
+
+  function onDropdownSelect(indexStr) {
+    if (indexStr === "") return;
+    displaySearchResults([fullCatalogue[parseInt(indexStr)]]);
+  }
+
+  function searchCatalogue() {
+    const kw = document.getElementById('searchKeyword').value.trim().toLowerCase();
+    if (!kw) return;
+    const results = fullCatalogue.filter(item => item.namaItem.toLowerCase().includes(kw));
+    displaySearchResults(results);
+  }
+
+  function displaySearchResults(results) {
+    const container = document.getElementById('searchResultsContainer');
+    container.innerHTML = "";
+    results.forEach(item => {
+      const card = document.createElement('div');
+      card.className = "item-card";
+      card.innerHTML = `
+        <div class="item-card-header">
+          <span>${item.namaItem}</span>
+          <button type="button" class="btn-add" onclick='addItemToList(${JSON.stringify(item).replace(/'/g, "&apos;")})'>+ Add to List</button>
+        </div>
+        <div class="item-grid">
+          <div><label>Kod Baru:</label><br><b>${item.kodBaru}</b></div>
+          <div><label>Deskripsi:</label><br>${item.deskripsiPembungkusan || '-'}</div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+    document.getElementById('searchResultsSection').style.display = 'block';
+  }
+
+  function addItemToList(item) {
+    const month = document.getElementById('orderMonth').value;
+    const year = document.getElementById('orderYear').value;
+
+    fetch(`${SCRIPT_API_URL}?action=getItemOrderDetails&kodBaru=${encodeURIComponent(item.kodBaru)}&month=${month}&year=${year}`)
+      .then(res => res.json())
+      .then(res => {
+        selectedItems.push({
+          namaItem: item.namaItem,
+          kodBaru: item.kodBaru,
+          deskripsiPembungkusan: item.deskripsiPembungkusan || '-',
+          skuPembekalan: item.skuPembekalan || '',
+          baki: res.success ? res.baki : 0,
+          pastUsage: res.success ? res.pastUsage : 0,
+          pesananBulanan: ""
+        });
+
+        renderSelectedItems();
+        document.getElementById('searchResultsSection').style.display = 'none';
+        document.getElementById('searchKeyword').value = '';
+        document.getElementById('itemDropdown').selectedIndex = 0;
+      });
+  }
+
+  function renderSelectedItems() {
+    const container = document.getElementById('selectedItemsContainer');
+    container.innerHTML = "";
+
+    if (selectedItems.length === 0) {
+      container.innerHTML = '<p style="color: #6c757d; font-style: italic;" id="emptyListMsg">No items added yet. Search and add items from the catalogue above.</p>';
+      return;
+    }
+
+    selectedItems.forEach((item, index) => {
+      const card = document.createElement('div');
+      card.className = "item-card";
+      card.innerHTML = `
+        <div class="item-card-header">
+          <span>Item #${index + 1}: ${item.namaItem}</span>
+          <button type="button" class="btn-remove" onclick="removeItemFromList(${index})">Remove</button>
+        </div>
+        <div class="grid-2">
+          <div><label>Nama Item:</label><br><b>${item.namaItem}</b></div>
+          <div><label>Item Kod Baru:</label><br><b>${item.kodBaru}</b></div>
+        </div>
+        <div class="grid-2" style="margin-top: 10px;">
+          <div><label>Deskripsi Pembungkusan:</label><br>${item.deskripsiPembungkusan}</div>
+          <div><label>Baki (Latest Balance):</label><br><b style="color:#28a745;">${item.baki}</b></div>
+        </div>
+        <div style="margin-top: 10px;">
+          <label>Pesanan Bulanan (Quantity):</label>
+          <input type="number" min="1" value="${item.pesananBulanan}" placeholder="Enter order quantity" onchange="updatePesanan(${index}, this.value)" required>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function updatePesanan(index, val) {
+    selectedItems[index].pesananBulanan = val;
+  }
+
+  function removeItemFromList(index) {
+    selectedItems.splice(index, 1);
+    renderSelectedItems();
+  }
+
+  document.getElementById('orderForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (selectedItems.length === 0) {
+      alert("Please add at least ONE item to the list before submitting.");
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = "Generating Monthly Ordering PDF...";
+
+    // 1. Pre-open a blank tab immediately on physical user click to bypass browser popup blockers
+    const pdfWindow = window.open('', '_blank');
+    if (pdfWindow) {
+      pdfWindow.document.write('<h2 style="font-family:sans-serif; text-align:center; margin-top:50px;">Generating your Monthly Indent PDF... Please wait.</h2>');
+    }
+
+    const payload = {
+      month: document.getElementById('orderMonth').value,
+      year: document.getElementById('orderYear').value,
+      t242No: document.getElementById('t242No').value.trim(),
+      items: selectedItems
+    };
+
+    fetch(SCRIPT_API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "exportMonthlyIndentPdf",
+        payload: payload
+      })
+    })
+    .then(res => res.json())
+    .then(res => {
+      btn.disabled = false;
+      btn.textContent = "Print as PDF";
+      
+      if (res.success && res.pdfUrl) {
+        // 2. Redirect the pre-opened tab to the generated Google Drive PDF link
+        if (pdfWindow) {
+          pdfWindow.location.href = res.pdfUrl;
+        } else {
+          window.location.href = res.pdfUrl;
+        }
+      } else {
+        if (pdfWindow) pdfWindow.close();
+        alert("Failed to generate PDF: " + (res.error || "Unknown error"));
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.textContent = "Print as PDF";
+      if (pdfWindow) pdfWindow.close();
+      alert("Error exporting PDF: " + err);
+    });
+  });
+
+  function resetForm() {
+    document.getElementById('orderForm').reset();
+    selectedItems = [];
+    renderSelectedItems();
+    document.getElementById('searchResultsSection').style.display = 'none';
+    populateDates();
+  }
+
+  function startScanner() {
+    document.getElementById('scannerModal').style.display = 'block';
+    if (!html5QrCode) html5QrCode = new Html5Qrcode("reader-modal");
+    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 220 }, (text) => {
+      stopScanner();
+      const matched = fullCatalogue.find(i => i.kodBaru.toLowerCase() === text.trim().toLowerCase());
+      if (matched) addItemToList(matched); else alert("Item code not found in catalogue!");
+    });
+  }
+
+  function stopScanner() {
+    if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop();
+    document.getElementById('scannerModal').style.display = 'none';
+  }
+</script>
+</body>
+</html>
